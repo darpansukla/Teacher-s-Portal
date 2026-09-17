@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher's Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', "Segoe UI", 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        appleBg: '#F2F2F7',
+                        appleCard: 'rgba(255, 255, 255, 0.85)',
+                        appleBlue: '#007AFF',
+                        appleGreen: '#34C759',
+                        appleGray: '#8E8E93',
+                        appleText: '#1C1C1E',
+                        appleBorder: 'rgba(209, 209, 214, 0.6)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+        body {
+            background-color: #F2F2F7; color: #1C1C1E;
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0;
+            background-image: radial-gradient(at 10% 10%, rgba(0, 122, 255, 0.08) 0px, transparent 50%),
+                              radial-gradient(at 90% 90%, rgba(52, 199, 89, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border-radius: 1.25rem;
+        }
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+        /* iOS App Icon Style Simulation */
+        .ios-icon {
+            border-radius: 22.5% / 22.5%;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ios-icon:hover {
+            transform: scale(1.05);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen p-3 md:p-6">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-15px] w-[90%] max-w-sm">
+        <div class="bg-[#1C1C1E]/95 backdrop-blur-md text-white text-xs font-medium py-3 px-4 rounded-2xl shadow-xl flex items-center space-x-2.5 border border-white/10">
+            <i class="fa-solid fa-circle-info text-appleBlue text-sm"></i>
+            <span id="toast-message" class="flex-1">Notification</span>
+        </div>
+    </div>
+
+    <!-- Main Responsive Container -->
+    <div class="flex flex-col flex-1 w-full max-w-md md:max-w-4xl mx-auto space-y-4 pb-4">
+        
+        <!-- Header Bar -->
+        <header class="glass-card px-5 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div id="header-back-btn" class="hidden w-9 h-9 rounded-full bg-gray-200/70 text-appleText flex items-center justify-center text-xs cursor-pointer active:scale-90 transition-transform" onclick="goBackToCategories()">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-appleBlue/10 text-appleBlue flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-graduation-cap" id="header-icon"></i>
+                </div>
+                <div>
+                    <h1 id="header-title" class="text-sm md:text-base font-bold text-appleText leading-tight">Teacher's Portal</h1>
+                    <p id="header-subtitle" class="text-[10px] md:text-xs text-appleGray">Select a category to access tools</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="shareDirectory()" class="w-10 h-10 rounded-full bg-gray-200/80 text-appleText flex items-center justify-center text-xs shadow-xs active:scale-90 transition-transform" title="Share Portal">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Search Bar (Visible in List View) -->
+        <div id="search-bar-container" class="glass-card p-3 hidden">
+            <div class="relative w-full">
+                <i class="fa-solid fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-appleGray text-xs"></i>
+                <input type="text" id="search-input" oninput="filterPortals()" placeholder="Search tools..." class="w-full pl-9 pr-4 py-2.5 bg-white/80 border border-appleBorder rounded-xl text-xs text-appleText focus:outline-none focus:ring-2 focus:ring-appleBlue">
+            </div>
+        </div>
+
+        <!-- Dynamic Content Container -->
+        <div id="app-view-container" class="flex flex-col space-y-3">
+            <!-- Rendered via JS -->
+        </div>
+
+    </div>
+
+    <!-- ACTION / SHARE MODAL -->
+    <div id="action-modal" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="glass-modal w-full max-w-sm p-6 rounded-2xl flex flex-col space-y-4 animate-fade-in shadow-2xl">
+            <div class="text-center">
+                <div id="modal-icon-preview" class="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center font-black text-xl mx-auto mb-3 shadow-lg ios-icon">
+                    EX
+                </div>
+                <h3 id="modal-portal-title" class="text-sm font-bold text-appleText">Portal Title</h3>
+                <p id="modal-portal-title-as" class="text-xs text-appleGray font-medium mt-0.5">Assamese Title</p>
+                <p class="text-[11px] text-appleGray mt-1">Choose an action below</p>
+            </div>
+            <div class="flex flex-col space-y-2">
+                <a id="modal-open-btn" href="#" target="_blank" class="w-full py-3 bg-appleBlue text-white text-center text-xs font-semibold rounded-xl active:scale-95 shadow-sm flex items-center justify-center space-x-2">
+                    <span>Click</span>
+                </a>
+                <button onclick="shareViaWhatsApp()" class="w-full py-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-xl active:scale-95 shadow-sm flex items-center justify-center space-x-2">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>Share via WhatsApp</span>
+                </button>
+            </div>
+            <button onclick="closeActionModal()" class="w-full py-2 bg-transparent text-appleGray text-xs font-semibold active:scale-95">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Mandatory Footer Branding -->
+    <footer class="w-full text-center py-2 text-[11px] text-appleGray font-medium">
+        Designed & Developed by Darpan Sukla
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        const portalsData = [
+            // Exam Category (Custom ordered with first 3 requested items at top)
+            { 
+                name: "New Students Enrollment", 
+                nameAs: "নতুন ছাত্ৰ-ছাত্ৰী নামভৰ্তি", 
+                url: "https://darpansukla.github.io/fineartsexam27/", 
+                category: "Exam", 
+                abbr: "NE", 
+                color: "bg-blue-500" 
+            },
+            { 
+                name: "Exam-Form-Fill-up Portal", 
+                nameAs: "পৰীক্ষাৰ পত্ৰ পূৰণ পৰ্টেল", 
+                url: "https://darpansukla.github.io/Fine-Arts-Examination/", 
+                category: "Exam", 
+                abbr: "EF", 
+                color: "bg-indigo-500" 
+            },
+            { 
+                name: "Exam Form Fillup Dashboard", 
+                nameAs: "পৰীক্ষা পত্ৰ পূৰণ ডেচব’ৰ্ড", 
+                url: "https://darpansukla.github.io/Exam-Dashboard/", 
+                category: "Exam", 
+                abbr: "ED", 
+                color: "bg-red-500" 
+            },
+            { 
+                name: "Mock Test Fine Arts (Painting)", 
+                nameAs: "মক টেষ্ট চাচিত্ৰ কলা (চিত্ৰকলা)", 
+                url: "https://darpansukla.github.io/Mock-Test-Fine-Arts-Painting-/", 
+                category: "Exam", 
+                abbr: "MT", 
+                color: "bg-purple-500" 
+            },
+            { 
+                name: "Exam Attendance", 
+                nameAs: "পৰীক্ষাৰ উপস্থিতি", 
+                url: "https://darpansukla.github.io/Examattendance/", 
+                category: "Exam", 
+                abbr: "EA", 
+                color: "bg-pink-500" 
+            },
+            { 
+                name: "Student Marking Management System", 
+                nameAs: "ছাত্ৰ-ছাত্ৰী নম্বৰ পৰিচালনা ব্যৱস্থা", 
+                url: "https://darpansukla.github.io/Student-Marking-Management-System/", 
+                category: "Exam", 
+                abbr: "SM", 
+                color: "bg-rose-500" 
+            },
+
+            // Essential Category
+            { 
+                name: "Attendance", 
+                nameAs: "উপস্থিতি", 
+                url: "https://darpansukla.github.io/Fine-Arts-Attendance/", 
+                category: "Essential", 
+                abbr: "AT", 
+                color: "bg-emerald-500" 
+            },
+            { 
+                name: "Monthly Fees Collection System", 
+                nameAs: "মাহিলী মাছচ সংগ্ৰহ ব্যৱস্থা", 
+                url: "https://darpansukla.github.io/Fees-Management-Portal/", 
+                category: "Essential", 
+                abbr: "MF", 
+                color: "bg-teal-500" 
+            },
+            { 
+                name: "Art School Site", 
+                nameAs: "শিল্প বিদ্যালয়ৰ ৱেবছাইট", 
+                url: "https://sites.google.com/view/puthicitra-school-of-fine-arts/home", 
+                category: "Essential", 
+                abbr: "AS", 
+                color: "bg-green-600" 
+            },
+            { 
+                name: "Re-Admission", 
+                nameAs: "পুনৰ নামভৰ্তি", 
+                url: "https://darpansukla.github.io/Re-Admission-Portal/", 
+                category: "Essential", 
+                abbr: "RA", 
+                color: "bg-cyan-600" 
+            },
+            { 
+                name: "Attendance Report", 
+                nameAs: "উপস্থিতি প্ৰতিবেদন", 
+                url: "https://darpansukla.github.io/Fine-Arts-Attendance-Report/", 
+                category: "Essential", 
+                abbr: "AR", 
+                color: "bg-sky-500" 
+            },
+            { 
+                name: "South Point Visual & Performing Arts School - Monthly Fee Portal", 
+                nameAs: "চাউথ পইণ্ট বিদ্যালয় - মাহিলী মাছচ পৰ্টেল", 
+                url: "https://darpansukla.github.io/SPVPAS-Monthly-Fee-Portal/", 
+                category: "Essential", 
+                abbr: "SP", 
+                color: "bg-amber-600" 
+            }
+        ];
+
+        // Categories mapped with initials and custom background colors
+        const categoriesConfig = {
+            "Exam": { abbr: "EX", color: "bg-blue-500", icon: "fa-file-lines", desc: "Examination portals & dashboards" },
+            "Essential": { abbr: "ES", color: "bg-emerald-500", icon: "fa-layer-group", desc: "Attendance, fees, and school sites" }
+        };
+
+        let currentView = 'categories'; // 'categories' or 'portals'
+        let activeCategory = null;
+        let activePortal = null;
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('opacity-0', 'translate-y-[-15px]', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-[-15px]', 'pointer-events-none');
+            }, 2500);
+        }
+
+        function renderView() {
+            const container = document.getElementById('app-view-container');
+            const headerTitle = document.getElementById('header-title');
+            const headerSubtitle = document.getElementById('header-subtitle');
+            const backBtn = document.getElementById('header-back-btn');
+            const headerIcon = document.getElementById('header-icon');
+            const searchBarContainer = document.getElementById('search-bar-container');
+
+            if (currentView === 'categories') {
+                backBtn.classList.add('hidden');
+                searchBarContainer.classList.add('hidden');
+                headerTitle.innerText = "Teacher's Portal";
+                headerSubtitle.innerText = "Select a category to access tools";
+                headerIcon.className = "fa-solid fa-graduation-cap";
+
+                container.innerHTML = `<div id="categories-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>`;
+                let gridEl = document.getElementById('categories-grid');
+
+                Object.keys(categoriesConfig).forEach(catName => {
+                    let cfg = categoriesConfig[catName];
+                    let count = portalsData.filter(p => p.category === catName).length;
+
+                    let card = document.createElement('div');
+                    card.className = "glass-card p-5 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all hover:shadow-lg group";
+                    card.onclick = () => selectCategory(catName);
+
+                    card.innerHTML = `
+                        <div class="w-16 h-16 rounded-2xl ${cfg.color} text-white flex items-center justify-center font-extrabold text-xl shadow-lg mb-3 ios-icon group-hover:scale-105">
+                            ${cfg.abbr}
+                        </div>
+                        <h3 class="text-sm font-bold text-appleText mb-0.5">${catName}</h3>
+                        <p class="text-[10px] text-appleGray font-medium">${count} Portals</p>
+                    `;
+                    gridEl.appendChild(card);
+                });
+
+            } else if (currentView === 'portals') {
+                backBtn.classList.remove('hidden');
+                searchBarContainer.classList.remove('hidden');
+                headerTitle.innerText = activeCategory;
+                headerSubtitle.innerText = `${categoriesConfig[activeCategory].desc}`;
+                headerIcon.className = `fa-solid ${categoriesConfig[activeCategory].icon}`;
+
+                container.innerHTML = `<div id="portals-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>`;
+                renderPortalsList();
+            }
+        }
+
+        function selectCategory(catName) {
+            activeCategory = catName;
+            currentView = 'portals';
+            document.getElementById('search-input').value = '';
+            renderView();
+        }
+
+        function goBackToCategories() {
+            currentView = 'categories';
+            activeCategory = null;
+            renderView();
+        }
+
+        function filterPortals() {
+            renderPortalsList();
+        }
+
+        function renderPortalsList() {
+            const gridEl = document.getElementById('portals-grid');
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+
+            let filtered = portalsData.filter(item => {
+                let matchesCategory = (item.category === activeCategory);
+                let matchesQuery = item.name.toLowerCase().includes(query) || item.nameAs.toLowerCase().includes(query);
+                return matchesCategory && matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                gridEl.innerHTML = `
+                    <div class="col-span-full glass-card p-12 text-center text-appleGray text-xs">
+                        <i class="fa-solid fa-folder-open text-2xl mb-2 opacity-50 block"></i>
+                        No tools found matching your search.
+                    </div>
+                `;
+                return;
+            }
+
+            gridEl.innerHTML = '';
+            filtered.forEach(item => {
+                let card = document.createElement('div');
+                card.className = "glass-card p-4 flex flex-col items-center text-center cursor-pointer active:scale-95 transition-all hover:shadow-lg group";
+                card.onclick = () => openActionModal(item);
+
+                card.innerHTML = `
+                    <div class="w-16 h-16 rounded-2xl ${item.color} text-white flex items-center justify-center font-extrabold text-lg shadow-lg mb-3 ios-icon group-hover:scale-105">
+                        ${item.abbr}
+                    </div>
+                    <h3 class="text-xs font-bold text-appleText line-clamp-2 leading-snug mb-0.5">${item.name}</h3>
+                    <p class="text-[10px] font-medium text-appleGray line-clamp-1">${item.nameAs}</p>
+                `;
+                gridEl.appendChild(card);
+            });
+        }
+
+        function openActionModal(item) {
+            activePortal = item;
+            document.getElementById('modal-portal-title').innerText = item.name;
+            document.getElementById('modal-portal-title-as').innerText = item.nameAs;
+            let iconPreview = document.getElementById('modal-icon-preview');
+            iconPreview.className = `w-16 h-16 rounded-2xl ${item.color} text-white flex items-center justify-center font-black text-xl mx-auto mb-3 shadow-lg ios-icon`;
+            iconPreview.innerText = item.abbr;
+            document.getElementById('modal-open-btn').href = item.url;
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function closeActionModal() {
+            document.getElementById('action-modal').classList.add('hidden');
+            activePortal = null;
+        }
+
+        function shareViaWhatsApp() {
+            if (!activePortal) return;
+            let text = `Check out ${activePortal.name} (${activePortal.nameAs}): ${activePortal.url}`;
+            let whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(whatsappUrl, '_blank');
+            closeActionModal();
+        }
+
+        function shareDirectory() {
+            let currentUrl = window.location.href;
+            if (navigator.share) {
+                navigator.share({
+                    title: "Teacher's Portal",
+                    text: 'Explore all Fine Arts examination and essential tools:',
+                    url: currentUrl,
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showToast("Portal link copied to clipboard!");
+                });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', renderView);
+    </script>
+</body>
+</html>
